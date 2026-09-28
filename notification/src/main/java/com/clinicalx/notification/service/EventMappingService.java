@@ -7,6 +7,9 @@ import com.clinicalx.notification.repository.EventMappingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -19,24 +22,13 @@ public class EventMappingService {
 
     public List<EventMapping> create(EventMappingRequest request) {
 
-        List<EventMapping> mappings = request.getMappings()
-                .stream()
-                .flatMap(item -> item.getNotificationTypes()
-                        .stream()
-                        .map(notificationType -> {
+        List<EventMapping> mappings = request.getMappings().stream()
+                .flatMap(item -> item.getNotificationTypes().stream().map(notificationType -> {
+                    if (repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(request.getClientId(),
+                            request.getClinicId(), item.getEventId(), notificationType)) {
 
-                            if (repository
-                                    .existsByClientIdAndClinicIdAndEventIdAndNotificationType(
-                                            request.getClientId(),
-                                            request.getClinicId(),
-                                            item.getEventId(),
-                                            notificationType)) {
-
-                                throw new IllegalArgumentException(
-                                        "Event mapping already exists for eventId: "
-                                                + item.getEventId()
-                                                + ", notificationType: "
-                                                + notificationType);
+                        throw new IllegalArgumentException("Event mapping already exists for eventId: " + item.getEventId()
+                                                + ", notificationType: " + notificationType);
                             }
 
                             EventMapping mapping = new EventMapping();
@@ -46,38 +38,46 @@ public class EventMappingService {
                             mapping.setEventId(item.getEventId());
                             mapping.setNotificationType(notificationType);
 
-                            return mapping;
-                        }))
-                .toList();
-
+                            return mapping;})).toList();
         return repository.saveAll(mappings);
     }
 
     @Transactional(readOnly = true)
-    public List<EventMapping> get(Long clinicId, Long clientId) {
+    public Page<EventMapping> get(Long clinicId, Long clientId, int page) {
+
+        int size = 10;
+
+        Pageable pageable = PageRequest.of(page, size);
 
         if (clinicId != null && clientId != null) {
-            return repository.findByClinicIdAndClientId(
-                    clinicId, clientId);
+            return repository.findByClinicIdAndClientId(clinicId, clientId, pageable);
         }
 
         if (clinicId != null) {
-            return repository.findByClinicId(clinicId);
+            return repository.findByClinicId(clinicId, pageable);
         }
 
         if (clientId != null) {
-            return repository.findByClientId(clientId);
+            return repository.findByClientId(clientId, pageable);
         }
 
-        return repository.findAll();
+        return repository.findAll(pageable);
     }
 
     public EventMapping update(Long id, EventMapping mapping) {
 
-        EventMapping existing = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Event mapping not found with id: " + id));
+        boolean exists = repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(
+                        mapping.getClientId(),
+                        mapping.getClinicId(),
+                        mapping.getEventId(),
+                        mapping.getNotificationType()
+                );
+
+        if (exists) {
+            throw new IllegalArgumentException("Event mapping already exists");
+        }
+
+        EventMapping existing = repository.getReferenceById(id);
 
         existing.setClientId(mapping.getClientId());
         existing.setClinicId(mapping.getClinicId());
@@ -88,7 +88,6 @@ public class EventMappingService {
     }
 
     public String delete(Long id) {
-
         repository.deleteById(id);
 
         return "Event mapping deleted successfully";

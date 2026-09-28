@@ -4,6 +4,7 @@ import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.service.EventMappingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,18 @@ public class EventMappingController {
     private final EventMappingService service;
 
     @GetMapping
-    public ResponseEntity<List<EventMapping>> get(
+    public ResponseEntity<Page<EventMapping>> get(
             @RequestParam(required = false) Long clinicId,
-            @RequestParam(required = false) Long clientId) {
+            @RequestParam(required = false) Long clientId,
+            @RequestParam(defaultValue = "0") int page) {
 
-        return ResponseEntity.ok(service.get(clinicId, clientId));
+        return ResponseEntity.ok(
+                service.get(clinicId, clientId, page)
+        );
     }
 
     @PostMapping
-    public ResponseEntity<List<EventMapping>> create(
-            @RequestBody EventMappingRequest request) {
+    public ResponseEntity<List<EventMapping>> create(@RequestBody EventMappingRequest request) {
 
         return ResponseEntity.ok(service.create(request));
     }
@@ -40,10 +43,9 @@ public class EventMappingController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+    public ResponseEntity<String> delete(@PathVariable Long id) {
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(service.delete(id));
     }
 
 

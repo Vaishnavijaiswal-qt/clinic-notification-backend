@@ -20,9 +20,10 @@ public class NotificationEventConfigController {
     private final NotificationEventConfigService service;
 
     @GetMapping
-    public ResponseEntity<List<NotificationEventResponse>> getEvents( ) {
+    public ResponseEntity<List<NotificationEventResponse>> getEvents(
+            @RequestParam(required = false) String search) {
 
-        return ResponseEntity.ok(service.getEvents());
+        return ResponseEntity.ok(service.getEvents(search));
     }
 
     @PostMapping

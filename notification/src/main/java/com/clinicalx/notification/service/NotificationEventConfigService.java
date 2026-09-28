@@ -3,6 +3,7 @@ package com.clinicalx.notification.service;
 import com.clinicalx.notification.dto.NotificationEventCreateRequest;
 import com.clinicalx.notification.dto.NotificationEventResponse;
 import com.clinicalx.notification.dto.NotificationEventUpdateRequest;
+import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.entity.NotificationEventConfig;
 import com.clinicalx.notification.repository.NotificationEventConfigRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +19,12 @@ public class NotificationEventConfigService {
     private final NotificationEventConfigRepository repository;
 
     @Transactional(readOnly = true)
-    public List<NotificationEventResponse> getEvents() {
+    public List<NotificationEventResponse> getEvents(String search) {
 
-        return repository.findByOrderByCreatedAtAsc().stream().map(this::toResponse).toList();
+        List<NotificationEventConfig> events = (search == null || search.isBlank())
+                        ? repository.findByOrderByCreatedAtAsc() : repository.findByEventNameContainingIgnoreCaseOrderByCreatedAtAsc(search.trim());
+
+        return events.stream().map(this::toResponse).toList();
     }
 
     @Transactional
@@ -42,22 +46,21 @@ public class NotificationEventConfigService {
     @Transactional
     public NotificationEventResponse updateEvent(Long id, NotificationEventUpdateRequest request) {
 
-        NotificationEventConfig event = repository.findById(id).orElseThrow(() -> new IllegalArgumentException(
-                                        "Notification event not found"));
+        if (repository.existsByEventNameIgnoreCaseAndIdNot(request.eventName(), id)) {
+            throw new IllegalArgumentException("Event already exists: " + request.eventName());
+        }
+
+        NotificationEventConfig event = repository.getReferenceById(id);
 
         event.setEventName(request.eventName());
         event.setDescription(request.description());
 
-        NotificationEventConfig updated = repository.save(event);
-        return toResponse(updated);
+        return toResponse(repository.save(event));
     }
 
     @Transactional
     public void deleteEvent(Long id) {
-
-        NotificationEventConfig event = repository.findById(id).orElseThrow(() -> new IllegalArgumentException(
-                                        "Notification event not found"));
-        repository.delete(event);
+        repository.deleteById(id);
     }
 
     private NotificationEventResponse toResponse(NotificationEventConfig event) {

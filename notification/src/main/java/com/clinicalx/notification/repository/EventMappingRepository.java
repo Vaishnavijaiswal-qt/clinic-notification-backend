@@ -2,24 +2,19 @@ package com.clinicalx.notification.repository;
 
 import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.enums.NotificationType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface EventMappingRepository
-        extends JpaRepository<EventMapping, Long> {
+public interface EventMappingRepository extends JpaRepository<EventMapping, Long> {
 
-    List<EventMapping> findByClientId(Long clientId);
+    Page<EventMapping> findByClientId(Long clientId, Pageable pageable);
 
-    List<EventMapping> findByClinicId(Long clinicId);
+    Page<EventMapping> findByClinicId(Long clinicId, Pageable pageable);
 
-    List<EventMapping> findByClinicIdAndClientId(
-            Long clinicId,
-            Long clientId);
+    Page<EventMapping> findByClinicIdAndClientId(Long clinicId, Long clientId, Pageable pageable);
 
-    boolean existsByClientIdAndClinicIdAndEventIdAndNotificationType(
-            Long clientId,
-            Long clinicId,
-            Long eventId,
-            NotificationType notificationType);
+    boolean existsByClientIdAndClinicIdAndEventIdAndNotificationType(Long clientId, Long clinicId, Long eventId, NotificationType notificationType);
 }

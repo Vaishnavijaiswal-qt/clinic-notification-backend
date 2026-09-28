@@ -17,8 +17,8 @@ public class ClientService {
 
     public List<ClientResponse> getClients() {
 
-        return clientRepository.findAll()
-                .stream().map(client -> new ClientResponse(client.getId(), client.getName())).toList();
+        return clientRepository.findAll().
+                stream().map(client -> new ClientResponse(client.getId(), client.getName())).toList();
     }
 
 }
