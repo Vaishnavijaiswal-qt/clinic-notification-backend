@@ -7,9 +7,6 @@ import com.clinicalx.notification.repository.EventMappingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -43,37 +40,39 @@ public class EventMappingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<EventMapping> get(
+    public List<EventMapping> get(
             Long clinicId,
             Long clientId,
-            String search,
-            int page) {
-
-        int size = 10;
-
-        Pageable pageable = PageRequest.of(page, size);
+            String search) {
 
         if (search != null && search.isBlank()) {
             search = null;
         }
 
         if (search != null) {
-            return repository.search(clinicId, clientId, search, pageable);
+            return repository.search(
+                    clinicId,
+                    clientId,
+                    search.trim()
+            );
         }
 
         if (clinicId != null && clientId != null) {
-            return repository.findByClinicIdAndClientId(clinicId, clientId, pageable);
+            return repository.findByClinicIdAndClientId(
+                    clinicId,
+                    clientId
+            );
         }
 
         if (clinicId != null) {
-            return repository.findByClinicId(clinicId, pageable);
+            return repository.findByClinicId(clinicId);
         }
 
         if (clientId != null) {
-            return repository.findByClientId(clientId, pageable);
+            return repository.findByClientId(clientId);
         }
 
-        return repository.findAll(pageable);
+        return repository.findAll();
     }
 
     public EventMapping update(Long id, EventMapping mapping) {

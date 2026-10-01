@@ -4,7 +4,7 @@ import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.service.EventMappingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,14 +18,13 @@ public class EventMappingController {
     private final EventMappingService service;
 
     @GetMapping
-    public ResponseEntity<Page<EventMapping>> get(
+    public ResponseEntity<List<EventMapping>> get(
             @RequestParam(required = false) Long clinicId,
             @RequestParam(required = false) Long clientId,
-            @RequestParam(required = false) String search,
-            @RequestParam(defaultValue = "0") int page) {
+            @RequestParam(required = false) String search) {
 
         return ResponseEntity.ok(
-                service.get(clinicId, clientId, search, page)
+                service.get(clinicId, clientId, search)
         );
     }
     @PostMapping

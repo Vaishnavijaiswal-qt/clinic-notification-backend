@@ -2,22 +2,21 @@ package com.clinicalx.notification.repository;
 
 import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.enums.NotificationType;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface EventMappingRepository extends JpaRepository<EventMapping, Long> {
 
-    Page<EventMapping> findByClientId(Long clientId, Pageable pageable);
+    List<EventMapping> findByClientId(Long clientId);
 
-    Page<EventMapping> findByClinicId(Long clinicId, Pageable pageable);
+    List<EventMapping> findByClinicId(Long clinicId);
 
-    Page<EventMapping> findByClinicIdAndClientId(
+    List<EventMapping> findByClinicIdAndClientId(
             Long clinicId,
-            Long clientId,
-            Pageable pageable
+            Long clientId
     );
 
     @Query("""
@@ -44,11 +43,10 @@ public interface EventMappingRepository extends JpaRepository<EventMapping, Long
                 )
             )
         """)
-    Page<EventMapping> search(
+    List<EventMapping> search(
             @Param("clinicId") Long clinicId,
             @Param("clientId") Long clientId,
-            @Param("search") String search,
-            Pageable pageable
+            @Param("search") String search
     );
 
     boolean existsByClientIdAndClinicIdAndEventIdAndNotificationType(
