@@ -43,11 +43,23 @@ public class EventMappingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<EventMapping> get(Long clinicId, Long clientId, int page) {
+    public Page<EventMapping> get(
+            Long clinicId,
+            Long clientId,
+            String search,
+            int page) {
 
         int size = 10;
 
         Pageable pageable = PageRequest.of(page, size);
+
+        if (search != null && search.isBlank()) {
+            search = null;
+        }
+
+        if (search != null) {
+            return repository.search(clinicId, clientId, search, pageable);
+        }
 
         if (clinicId != null && clientId != null) {
             return repository.findByClinicIdAndClientId(clinicId, clientId, pageable);

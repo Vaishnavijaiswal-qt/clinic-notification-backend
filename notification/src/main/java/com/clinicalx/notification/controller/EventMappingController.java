@@ -21,13 +21,13 @@ public class EventMappingController {
     public ResponseEntity<Page<EventMapping>> get(
             @RequestParam(required = false) Long clinicId,
             @RequestParam(required = false) Long clientId,
+            @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "0") int page) {
 
         return ResponseEntity.ok(
-                service.get(clinicId, clientId, page)
+                service.get(clinicId, clientId, search, page)
         );
     }
-
     @PostMapping
     public ResponseEntity<List<EventMapping>> create(@RequestBody EventMappingRequest request) {
 

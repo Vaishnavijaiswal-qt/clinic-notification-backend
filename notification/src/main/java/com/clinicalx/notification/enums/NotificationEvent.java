@@ -2,11 +2,18 @@ package com.clinicalx.notification.enums;
 
 public enum NotificationEvent {
 
-    PATIENT_REGISTRATION,
+    PATIENT_REGISTRATION("Patient Registration"),
+    PATIENT_APPOINTMENT("Patient Appointment"),
+    APPOINTMENT_RESCHEDULED("Appointment Rescheduled"),
+    APPOINTMENT_CANCELLED("Appointment Cancelled");
 
-    PATIENT_APPOINTMENT,
+    private final String displayName;
 
-    APPOINTMENT_RESCHEDULED,
+    NotificationEvent(String displayName) {
+        this.displayName = displayName;
+    }
 
-    APPOINTMENT_CANCELLED
+    public String getDisplayName() {
+        return displayName;
+    }
 }
