@@ -1,11 +1,14 @@
 package com.clinicalx.notification.controller;
 
 import com.clinicalx.notification.dto.NotificationPreferenceUpdateRequest;
+import com.clinicalx.notification.entity.CommunicationPreference;
 import com.clinicalx.notification.service.NotificationPreferenceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/notification-preferences")
@@ -15,11 +18,9 @@ public class NotificationPreferenceController {
     private final NotificationPreferenceService service;
 
     @PostMapping
-    public ResponseEntity<String> savePreferences(
+    public ResponseEntity<List<CommunicationPreference>> savePreferences(
             @Valid @RequestBody NotificationPreferenceUpdateRequest request) {
 
-        service.savePreferences(request);
-
-        return ResponseEntity.ok("Notification preferences saved successfully");
+        return ResponseEntity.ok(service.savePreferences(request));
     }
 }

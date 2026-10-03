@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -16,23 +18,38 @@ public class NotificationPreferenceService {
     private final ClinicRepository clinicRepository;
     private final CommunicationPreferenceRepository preferenceRepository;
 
-    public void savePreferences(NotificationPreferenceUpdateRequest request) {
+    public List<CommunicationPreference> savePreferences(
+            NotificationPreferenceUpdateRequest request) {
 
         Clinic clinic = clinicRepository.findById(request.getClinicId())
                 .orElseThrow(() -> new ResourceNotFoundException("Clinic not found"));
 
-        for (NotificationPreferenceItem item : request.getPreferences()) {
+        List<CommunicationPreference> preferences = request.getPreferences().stream()
+                .map(item -> {
 
-            CommunicationPreference preference = preferenceRepository.findByClinicIdAndNotificationEvent(clinic.getId(),
-                            item.getNotificationEvent()).orElseGet(CommunicationPreference::new);
+                    CommunicationPreference preference =
+                            preferenceRepository
+                                    .findByClinic_IdAndNotificationEvent((
+                                            clinic.getId()),
+                                            item.getNotificationEvent())
+                                    .orElseGet(CommunicationPreference::new);
 
-            preference.setClinic(clinic);
-            preference.setNotificationEvent(item.getNotificationEvent());
-            preference.setWhatsappEnabled(item.getWhatsappEnabled());
-            preference.setSmsEnabled(item.getSmsEnabled());
-            preference.setEmailEnabled(item.getEmailEnabled());
+                    // Set Client ID
+                    preference.setClientId(clinic.getClient().getId());
 
-            preferenceRepository.save(preference);
-        }
+                    // Set Clinic
+                    preference.setClinic(clinic);
+
+                    // Set notification details
+                    preference.setNotificationEvent(item.getNotificationEvent());
+                    preference.setWhatsappEnabled(item.getWhatsappEnabled());
+                    preference.setSmsEnabled(item.getSmsEnabled());
+                    preference.setEmailEnabled(item.getEmailEnabled());
+
+                    return preference;
+                })
+                .toList();
+
+        return preferenceRepository.saveAll(preferences);
     }
 }

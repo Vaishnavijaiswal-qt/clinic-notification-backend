@@ -13,6 +13,9 @@ import java.util.List;
 public class NotificationPreferenceUpdateRequest {
 
     @NotNull
+    private Long clientId;
+
+    @NotNull
     private Long clinicId;
 
     @NotEmpty

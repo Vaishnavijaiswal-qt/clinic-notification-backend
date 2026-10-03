@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface CommunicationPreferenceRepository extends JpaRepository<CommunicationPreference, Long> {
 
-    Optional<CommunicationPreference> findByClinicIdAndNotificationEvent(Long clinicId, NotificationEvent notificationEvent);
-
-    List<CommunicationPreference> findByClinicId(Long clinicId);
+    Optional<CommunicationPreference> findByClinic_IdAndNotificationEvent(
+            Long clinicId,
+            NotificationEvent notificationEvent);
 }
