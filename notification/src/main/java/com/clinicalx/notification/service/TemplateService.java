@@ -4,6 +4,8 @@ import com.clinicalx.notification.entity.Template;
 import com.clinicalx.notification.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.clinicalx.notification.enums.NotificationEvent;
+import com.clinicalx.notification.enums.NotificationType;
 
 import java.util.List;
 
@@ -88,5 +90,19 @@ public class TemplateService {
                                 "Template not found with id: " + id));
 
         templateRepository.delete(template);
+    }
+    // Get EMAIL template for an event
+    public Template getEmailTemplate(NotificationEvent event) {
+
+        return templateRepository
+                .findByNotificationEventAndNotificationType(
+                        event,
+                        NotificationType.EMAIL
+                )
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Email template not found for event: " + event
+                        )
+                );
     }
 }

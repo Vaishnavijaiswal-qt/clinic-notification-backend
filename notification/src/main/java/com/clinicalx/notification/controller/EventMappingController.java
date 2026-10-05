@@ -27,13 +27,12 @@ public class EventMappingController {
                 service.get(clinicId, clientId, search)
         );
     }
+
     @PostMapping
     public ResponseEntity<List<EventMapping>> create(@RequestBody EventMappingRequest request) {
 
         return ResponseEntity.ok(service.create(request));
     }
-
-
 
     @PutMapping("/{id}")
     public ResponseEntity<EventMapping> update(@PathVariable Long id, @RequestBody EventMapping mapping) {
@@ -46,6 +45,4 @@ public class EventMappingController {
 
         return ResponseEntity.ok(service.delete(id));
     }
-
-
 }
