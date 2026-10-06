@@ -1,14 +1,24 @@
 package com.clinicalx.notification.service;
 
 import com.clinicalx.notification.dto.EventMappingRequest;
+import com.clinicalx.notification.dto.EventMappingResponse;
+import com.clinicalx.notification.entity.Client;
+import com.clinicalx.notification.entity.Clinic;
 import com.clinicalx.notification.entity.EventMapping;
+import com.clinicalx.notification.entity.NotificationEventConfig;
 import com.clinicalx.notification.enums.NotificationType;
+import com.clinicalx.notification.repository.ClientRepository;
+import com.clinicalx.notification.repository.ClinicRepository;
 import com.clinicalx.notification.repository.EventMappingRepository;
+import com.clinicalx.notification.repository.NotificationEventConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,31 +26,54 @@ import java.util.List;
 public class EventMappingService {
 
     private final EventMappingRepository repository;
+    private final ClientRepository clientRepository;
+    private final ClinicRepository clinicRepository;
+    private final NotificationEventConfigRepository eventRepository;
 
-    public List<EventMapping> create(EventMappingRequest request) {
+    public List<EventMappingResponse> create(EventMappingRequest request) {
 
-        List<EventMapping> mappings = request.getMappings().stream()
-                .flatMap(item -> item.getNotificationTypes().stream().map(notificationType -> {
-                    if (repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(request.getClientId(),
-                            request.getClinicId(), item.getEventId(), notificationType)) {
+        List<EventMapping> mappings = new ArrayList<>();
 
-                        throw new IllegalArgumentException("Event mapping already exists for eventId: " + item.getEventId()
-                                                + ", notificationType: " + notificationType);
-                            }
+        for (EventMappingRequest.EventMappingItem item : request.getMappings()) {
 
-                            EventMapping mapping = new EventMapping();
+            for (NotificationType notificationType : item.getNotificationTypes()) {
 
-                            mapping.setClientId(request.getClientId());
-                            mapping.setClinicId(request.getClinicId());
-                            mapping.setEventId(item.getEventId());
-                            mapping.setNotificationType(notificationType);
+                boolean exists =
+                        repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(
+                                request.getClientId(),
+                                request.getClinicId(),
+                                item.getEventId(),
+                                notificationType
+                        );
 
-                            return mapping;})).toList();
-        return repository.saveAll(mappings);
+                if (exists) {
+                    continue;
+                }
+
+                EventMapping mapping = new EventMapping();
+
+                mapping.setClientId(request.getClientId());
+                mapping.setClinicId(request.getClinicId());
+                mapping.setEventId(item.getEventId());
+                mapping.setNotificationType(notificationType);
+
+                mappings.add(mapping);
+            }
+        }
+
+        repository.saveAll(mappings);
+
+        List<EventMapping> allMappings =
+                repository.findByClinicIdAndClientId(
+                        request.getClinicId(),
+                        request.getClientId()
+                );
+
+        return buildResponse(allMappings);
     }
 
     @Transactional(readOnly = true)
-    public List<EventMapping> get(
+    public List<EventMappingResponse> get(
             Long clinicId,
             Long clientId,
             String search) {
@@ -49,35 +82,43 @@ public class EventMappingService {
             search = null;
         }
 
+        List<EventMapping> mappings;
+
         if (search != null) {
-            return repository.search(
+
+            mappings = repository.search(
                     clinicId,
                     clientId,
                     search.trim()
             );
-        }
 
-        if (clinicId != null && clientId != null) {
-            return repository.findByClinicIdAndClientId(
+        } else if (clinicId != null && clientId != null) {
+
+            mappings = repository.findByClinicIdAndClientId(
                     clinicId,
                     clientId
             );
+
+        } else if (clinicId != null) {
+
+            mappings = repository.findByClinicId(clinicId);
+
+        } else if (clientId != null) {
+
+            mappings = repository.findByClientId(clientId);
+
+        } else {
+
+            mappings = repository.findAll();
         }
 
-        if (clinicId != null) {
-            return repository.findByClinicId(clinicId);
-        }
-
-        if (clientId != null) {
-            return repository.findByClientId(clientId);
-        }
-
-        return repository.findAll();
+        return buildResponse(mappings);
     }
 
     public EventMapping update(Long id, EventMapping mapping) {
 
-        boolean exists = repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(
+        boolean exists =
+                repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(
                         mapping.getClientId(),
                         mapping.getClinicId(),
                         mapping.getEventId(),
@@ -88,7 +129,8 @@ public class EventMappingService {
             throw new IllegalArgumentException("Event mapping already exists");
         }
 
-        EventMapping existing = repository.getReferenceById(id);
+        EventMapping existing =
+                repository.getReferenceById(id);
 
         existing.setClientId(mapping.getClientId());
         existing.setClinicId(mapping.getClinicId());
@@ -99,8 +141,159 @@ public class EventMappingService {
     }
 
     public String delete(Long id) {
+
         repository.deleteById(id);
 
         return "Event mapping deleted successfully";
+    }
+
+    private List<EventMappingResponse> buildResponse(
+            List<EventMapping> mappings) {
+
+        Map<Long, String> clientNames = new HashMap<>();
+        Map<Long, String> clinicNames = new HashMap<>();
+        Map<Long, String> eventNames = new HashMap<>();
+
+        List<Long> clientIds = new ArrayList<>();
+        List<Long> clinicIds = new ArrayList<>();
+        List<Long> eventIds = new ArrayList<>();
+
+        for (EventMapping mapping : mappings) {
+
+            if (!clientIds.contains(mapping.getClientId())) {
+                clientIds.add(mapping.getClientId());
+            }
+
+            if (!clinicIds.contains(mapping.getClinicId())) {
+                clinicIds.add(mapping.getClinicId());
+            }
+
+            if (!eventIds.contains(mapping.getEventId())) {
+                eventIds.add(mapping.getEventId());
+            }
+        }
+
+        List<Client> clients =
+                clientRepository.findAllById(clientIds);
+
+        for (Client client : clients) {
+            clientNames.put(
+                    client.getId(),
+                    client.getName()
+            );
+        }
+
+        List<Clinic> clinics =
+                clinicRepository.findAllById(clinicIds);
+
+        for (Clinic clinic : clinics) {
+            clinicNames.put(
+                    clinic.getId(),
+                    clinic.getName()
+            );
+        }
+
+        List<NotificationEventConfig> events =
+                eventRepository.findAllById(eventIds);
+
+        for (NotificationEventConfig event : events) {
+            eventNames.put(
+                    event.getId(),
+                    event.getEventName()
+            );
+        }
+
+        Map<String, EventMappingResponse> grouped =
+                new HashMap<>();
+
+        for (EventMapping mapping : mappings) {
+
+            String responseKey =
+                    mapping.getClientId()
+                            + "-"
+                            + mapping.getClinicId();
+
+            EventMappingResponse response =
+                    grouped.get(responseKey);
+
+            if (response == null) {
+
+                response = new EventMappingResponse();
+
+                response.setClientId(
+                        mapping.getClientId()
+                );
+
+                response.setClientName(
+                        clientNames.get(
+                                mapping.getClientId()
+                        )
+                );
+
+                response.setClinicId(
+                        mapping.getClinicId()
+                );
+
+                response.setClinicName(
+                        clinicNames.get(
+                                mapping.getClinicId()
+                        )
+                );
+
+                response.setMappings(
+                        new ArrayList<>()
+                );
+
+                grouped.put(
+                        responseKey,
+                        response
+                );
+            }
+
+            EventMappingResponse.EventMappingItem eventItem = null;
+
+            for (EventMappingResponse.EventMappingItem item :
+                    response.getMappings()) {
+
+                if (item.getEventId().equals(
+                        mapping.getEventId())) {
+
+                    eventItem = item;
+                    break;
+                }
+            }
+
+            if (eventItem == null) {
+
+                eventItem =
+                        new EventMappingResponse.EventMappingItem();
+
+                eventItem.setEventId(
+                        mapping.getEventId()
+                );
+
+                eventItem.setEventName(
+                        eventNames.get(
+                                mapping.getEventId()
+                        )
+                );
+
+                eventItem.setNotificationTypes(
+                        new ArrayList<>()
+                );
+
+                response.getMappings().add(
+                        eventItem
+                );
+            }
+
+            eventItem.getNotificationTypes().add(
+                    mapping.getNotificationType().name()
+            );
+        }
+
+        return new ArrayList<>(
+                grouped.values()
+        );
     }
 }
