@@ -19,20 +19,23 @@ public class EventMappingController {
     private final EventMappingService service;
 
     @GetMapping
-    public ResponseEntity<List<EventMappingResponse>> get(
+    public ResponseEntity<?> get(
             @RequestParam(required = false) Long clinicId,
             @RequestParam(required = false) Long clientId,
-            @RequestParam(required = false) String search) {
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
                 service.get(
                         clinicId,
                         clientId,
-                        search
+                        search,
+                        page,
+                        size
                 )
         );
     }
-
     @PostMapping
     public ResponseEntity<List<EventMappingResponse>> create(
             @RequestBody EventMappingRequest request) {
@@ -43,7 +46,7 @@ public class EventMappingController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventMapping> update(
+    public ResponseEntity<EventMappingResponse> update(
             @PathVariable Long id,
             @RequestBody EventMapping mapping) {
 

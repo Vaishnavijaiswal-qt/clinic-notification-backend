@@ -1,5 +1,6 @@
 package com.clinicalx.notification.service;
 
+import com.clinicalx.notification.dto.EventMappingPageResponse;
 import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.dto.EventMappingResponse;
 import com.clinicalx.notification.entity.Client;
@@ -14,6 +15,10 @@ import com.clinicalx.notification.repository.NotificationEventConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,10 +78,12 @@ public class EventMappingService {
     }
 
     @Transactional(readOnly = true)
-    public List<EventMappingResponse> get(
+    public EventMappingPageResponse get(
             Long clinicId,
             Long clientId,
-            String search) {
+            String search,
+            int page,
+            int size) {
 
         if (search != null && search.isBlank()) {
             search = null;
@@ -112,33 +119,57 @@ public class EventMappingService {
             mappings = repository.findAll();
         }
 
-        return buildResponse(mappings);
-    }
+        Pageable pageable = PageRequest.of(page, size);
 
-    public EventMapping update(Long id, EventMapping mapping) {
+        int start = (int) pageable.getOffset();
+        int end = Math.min(start + pageable.getPageSize(), mappings.size());
 
-        boolean exists =
-                repository.existsByClientIdAndClinicIdAndEventIdAndNotificationType(
-                        mapping.getClientId(),
-                        mapping.getClinicId(),
-                        mapping.getEventId(),
-                        mapping.getNotificationType()
-                );
+        List<EventMapping> pageMappings;
 
-        if (exists) {
-            throw new IllegalArgumentException("Event mapping already exists");
+        if (start >= mappings.size()) {
+            pageMappings = new ArrayList<>();
+        } else {
+            pageMappings = mappings.subList(start, end);
         }
 
-        EventMapping existing =
-                repository.getReferenceById(id);
+        List<EventMappingResponse> responses =
+                buildResponse(pageMappings);
+
+        int totalElements = mappings.size();
+
+        int totalPages = (int) Math.ceil(
+                (double) totalElements / size
+        );
+
+        return new EventMappingPageResponse(
+                responses,
+                new EventMappingPageResponse.Pagination(
+                        page,
+                        size,
+                        totalElements,
+                        totalPages,
+                        page == 0,
+                        page >= totalPages - 1
+                )
+        );
+    }
+
+    public EventMappingResponse update(Long id, EventMapping mapping) {
+
+        EventMapping existing = repository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Event mapping not found"));
 
         existing.setClientId(mapping.getClientId());
         existing.setClinicId(mapping.getClinicId());
         existing.setEventId(mapping.getEventId());
         existing.setNotificationType(mapping.getNotificationType());
 
-        return repository.save(existing);
+        EventMapping saved = repository.save(existing);
+
+        return buildResponse(List.of(saved)).get(0);
     }
+
 
     public String delete(Long id) {
 
@@ -203,97 +234,47 @@ public class EventMappingService {
             );
         }
 
-        Map<String, EventMappingResponse> grouped =
-                new HashMap<>();
+        List<EventMappingResponse> responseList =
+                new ArrayList<>();
 
         for (EventMapping mapping : mappings) {
 
-            String responseKey =
-                    mapping.getClientId()
-                            + "-"
-                            + mapping.getClinicId();
-
             EventMappingResponse response =
-                    grouped.get(responseKey);
+                    new EventMappingResponse();
 
-            if (response == null) {
+            response.setId(mapping.getId());
 
-                response = new EventMappingResponse();
+            response.setClientId(
+                    mapping.getClientId()
+            );
 
-                response.setClientId(
-                        mapping.getClientId()
-                );
+            response.setClientName(
+                    clientNames.get(mapping.getClientId())
+            );
 
-                response.setClientName(
-                        clientNames.get(
-                                mapping.getClientId()
-                        )
-                );
+            response.setClinicId(
+                    mapping.getClinicId()
+            );
 
-                response.setClinicId(
-                        mapping.getClinicId()
-                );
+            response.setClinicName(
+                    clinicNames.get(mapping.getClinicId())
+            );
 
-                response.setClinicName(
-                        clinicNames.get(
-                                mapping.getClinicId()
-                        )
-                );
+            response.setEventId(
+                    mapping.getEventId()
+            );
 
-                response.setMappings(
-                        new ArrayList<>()
-                );
+            response.setEventName(
+                    eventNames.get(mapping.getEventId())
+            );
 
-                grouped.put(
-                        responseKey,
-                        response
-                );
-            }
-
-            EventMappingResponse.EventMappingItem eventItem = null;
-
-            for (EventMappingResponse.EventMappingItem item :
-                    response.getMappings()) {
-
-                if (item.getEventId().equals(
-                        mapping.getEventId())) {
-
-                    eventItem = item;
-                    break;
-                }
-            }
-
-            if (eventItem == null) {
-
-                eventItem =
-                        new EventMappingResponse.EventMappingItem();
-
-                eventItem.setEventId(
-                        mapping.getEventId()
-                );
-
-                eventItem.setEventName(
-                        eventNames.get(
-                                mapping.getEventId()
-                        )
-                );
-
-                eventItem.setNotificationTypes(
-                        new ArrayList<>()
-                );
-
-                response.getMappings().add(
-                        eventItem
-                );
-            }
-
-            eventItem.getNotificationTypes().add(
+            response.setNotificationType(
                     mapping.getNotificationType().name()
             );
+
+            responseList.add(response);
         }
 
-        return new ArrayList<>(
-                grouped.values()
-        );
+        return responseList;
     }
 }

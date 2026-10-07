@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -17,8 +18,14 @@ public class ClientService {
 
     public List<ClientResponse> getClients() {
 
-        return clientRepository.findAll().
-                stream().map(client -> new ClientResponse(client.getId(), client.getName())).toList();
-    }
+        List<ClientResponse> responses = new ArrayList<>();
 
+        for (var client : clientRepository.findAll()) {
+            responses.add(
+                    new ClientResponse(client.getId(), client.getName())
+            );
+        }
+
+        return responses;
+    }
 }
