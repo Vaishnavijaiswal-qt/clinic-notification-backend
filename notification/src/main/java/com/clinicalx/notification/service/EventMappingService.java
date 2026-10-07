@@ -68,13 +68,10 @@ public class EventMappingService {
 
         repository.saveAll(mappings);
 
-        List<EventMapping> allMappings =
-                repository.findByClinicIdAndClientId(
-                        request.getClinicId(),
-                        request.getClientId()
-                );
+        repository.saveAll(mappings);
 
-        return buildResponse(allMappings);
+        return buildResponse(mappings);
+
     }
 
     @Transactional(readOnly = true)
