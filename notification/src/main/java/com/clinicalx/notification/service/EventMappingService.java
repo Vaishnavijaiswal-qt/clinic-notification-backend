@@ -3,6 +3,7 @@ package com.clinicalx.notification.service;
 import com.clinicalx.notification.dto.EventMappingPageResponse;
 import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.dto.EventMappingResponse;
+import com.clinicalx.notification.dto.EventMappingUpdateResponse;
 import com.clinicalx.notification.entity.Client;
 import com.clinicalx.notification.entity.Clinic;
 import com.clinicalx.notification.entity.EventMapping;
@@ -65,8 +66,6 @@ public class EventMappingService {
                 mappings.add(mapping);
             }
         }
-
-        repository.saveAll(mappings);
 
         repository.saveAll(mappings);
 
@@ -151,20 +150,58 @@ public class EventMappingService {
         );
     }
 
-    public EventMappingResponse update(Long id, EventMapping mapping) {
+    public EventMappingUpdateResponse update(EventMappingRequest request) {
 
-        EventMapping existing = repository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Event mapping not found"));
+        List<EventMapping> existingMappings =
+                repository.findByClientIdAndClinicIdAndEventId(
+                        request.getClientId(),
+                        request.getClinicId(),
+                        request.getEventId()
+                );
 
-        existing.setClientId(mapping.getClientId());
-        existing.setClinicId(mapping.getClinicId());
-        existing.setEventId(mapping.getEventId());
-        existing.setNotificationType(mapping.getNotificationType());
+        List<NotificationType> requestedTypes =
+                request.getNotificationTypes();
 
-        EventMapping saved = repository.save(existing);
+        List<NotificationType> existingTypes =
+                new ArrayList<>();
 
-        return buildResponse(List.of(saved)).get(0);
+        for (EventMapping existing : existingMappings) {
+
+            existingTypes.add(existing.getNotificationType());
+
+            if (!requestedTypes.contains(existing.getNotificationType())) {
+                repository.delete(existing);
+            }
+        }
+
+        for (NotificationType type : requestedTypes) {
+
+            if (!existingTypes.contains(type)) {
+
+                EventMapping mapping = new EventMapping();
+
+                mapping.setClientId(request.getClientId());
+                mapping.setClinicId(request.getClinicId());
+                mapping.setEventId(request.getEventId());
+                mapping.setNotificationType(type);
+
+                repository.save(mapping);
+            }
+        }
+
+        List<String> notificationTypes =
+                new ArrayList<>();
+
+        for (NotificationType type : requestedTypes) {
+            notificationTypes.add(type.name());
+        }
+
+        return new EventMappingUpdateResponse(
+                request.getClientId(),
+                request.getClinicId(),
+                request.getEventId(),
+                notificationTypes
+        );
     }
 
 

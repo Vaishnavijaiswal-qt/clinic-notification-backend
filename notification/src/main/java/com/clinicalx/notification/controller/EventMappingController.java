@@ -2,6 +2,7 @@ package com.clinicalx.notification.controller;
 
 import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.dto.EventMappingResponse;
+import com.clinicalx.notification.dto.EventMappingUpdateResponse;
 import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.service.EventMappingService;
 import lombok.RequiredArgsConstructor;
@@ -45,16 +46,14 @@ public class EventMappingController {
         );
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<EventMappingResponse> update(
-            @PathVariable Long id,
-            @RequestBody EventMapping mapping) {
+    @PutMapping
+    public ResponseEntity<EventMappingUpdateResponse> update(
+            @RequestBody EventMappingRequest request) {
 
         return ResponseEntity.ok(
-                service.update(id, mapping)
+                service.update(request)
         );
     }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(
             @PathVariable Long id) {

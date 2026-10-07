@@ -14,7 +14,13 @@ public class EventMappingRequest {
 
     private Long clinicId;
 
+    // Used for POST
     private List<EventMappingItem> mappings;
+
+    // Used for PUT
+    private Long eventId;
+
+    private List<NotificationType> notificationTypes;
 
     @Getter
     @Setter

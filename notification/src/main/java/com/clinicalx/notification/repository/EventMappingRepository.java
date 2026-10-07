@@ -55,4 +55,9 @@ public interface EventMappingRepository extends JpaRepository<EventMapping, Long
             Long eventId,
             NotificationType notificationType
     );
+    List<EventMapping> findByClientIdAndClinicIdAndEventId(
+            Long clientId,
+            Long clinicId,
+            Long eventId
+    );
 }
