@@ -14,15 +14,13 @@ import com.clinicalx.notification.repository.ClinicRepository;
 import com.clinicalx.notification.repository.EventMappingRepository;
 import com.clinicalx.notification.repository.NotificationEventConfigRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +68,6 @@ public class EventMappingService {
         repository.saveAll(mappings);
 
         return buildResponse(mappings);
-
     }
 
     @Transactional(readOnly = true)
@@ -115,37 +112,82 @@ public class EventMappingService {
             mappings = repository.findAll();
         }
 
-        Pageable pageable = PageRequest.of(page, size);
+        Map<String, List<EventMapping>> groupedMap =
+                new LinkedHashMap<>();
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), mappings.size());
+        for (EventMapping mapping : mappings) {
 
-        List<EventMapping> pageMappings;
+            String key =
+                    mapping.getClientId()
+                            + "-"
+                            + mapping.getClinicId()
+                            + "-"
+                            + mapping.getEventId();
 
-        if (start >= mappings.size()) {
-            pageMappings = new ArrayList<>();
-        } else {
-            pageMappings = mappings.subList(start, end);
+            if (!groupedMap.containsKey(key)) {
+                groupedMap.put(
+                        key,
+                        new ArrayList<>()
+                );
+            }
+
+            groupedMap.get(key).add(mapping);
+        }
+
+        List<List<EventMapping>> groupedMappings =
+                new ArrayList<>(
+                        groupedMap.values()
+                );
+
+        int totalElements =
+                groupedMappings.size();
+
+        int totalPages =
+                totalElements == 0
+                        ? 0
+                        : (int) Math.ceil(
+                        (double) totalElements / size
+                );
+
+        int safePage =
+                totalPages == 0
+                        ? 0
+                        : Math.min(
+                        Math.max(page, 0),
+                        totalPages - 1
+                );
+
+        int start =
+                safePage * size;
+
+        int end =
+                Math.min(
+                        start + size,
+                        totalElements
+                );
+
+        List<EventMapping> pageMappings =
+                new ArrayList<>();
+
+        for (int i = start; i < end; i++) {
+            pageMappings.addAll(
+                    groupedMappings.get(i)
+            );
         }
 
         List<EventMappingResponse> responses =
                 buildResponse(pageMappings);
 
-        int totalElements = mappings.size();
-
-        int totalPages = (int) Math.ceil(
-                (double) totalElements / size
-        );
-
         return new EventMappingPageResponse(
                 responses,
                 new EventMappingPageResponse.Pagination(
-                        page,
+                        safePage,
                         size,
                         totalElements,
                         totalPages,
-                        page == 0,
-                        page >= totalPages - 1
+                        safePage == 0,
+                        totalPages == 0 ||
+                                safePage >= totalPages - 1
                 )
         );
     }
@@ -162,7 +204,6 @@ public class EventMappingService {
         List<NotificationType> requestedTypes =
                 request.getNotificationTypes();
 
-        // Remove notification types that are no longer selected
         for (EventMapping existing : existingMappings) {
 
             NotificationType existingType =
@@ -173,7 +214,6 @@ public class EventMappingService {
             }
         }
 
-        // Add newly selected notification types
         for (NotificationType requestedType : requestedTypes) {
 
             boolean alreadyExists = false;
@@ -199,7 +239,6 @@ public class EventMappingService {
             }
         }
 
-        // Prepare the same response
         List<String> notificationTypes =
                 new ArrayList<>();
 
@@ -214,7 +253,6 @@ public class EventMappingService {
                 notificationTypes
         );
     }
-
 
     public String delete(Long id) {
 

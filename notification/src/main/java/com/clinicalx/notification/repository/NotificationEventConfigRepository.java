@@ -13,7 +13,7 @@ public interface NotificationEventConfigRepository
             Pageable pageable
     );
 
-    boolean existsByEventName(String eventName);
+    boolean existsByEventNameIgnoreCase(String eventName);
 
     boolean existsByEventNameIgnoreCaseAndIdNot(
             String eventName,

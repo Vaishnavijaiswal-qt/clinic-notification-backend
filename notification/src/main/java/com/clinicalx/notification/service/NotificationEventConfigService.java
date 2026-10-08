@@ -93,10 +93,13 @@ public class NotificationEventConfigService {
     public NotificationEventResponse createEvent(
             NotificationEventCreateRequest request) {
 
-        if (repository.existsByEventName(request.eventName())) {
+        // Check duplicate event name ignoring case
+        if (repository.existsByEventNameIgnoreCase(
+                request.eventName())) {
 
             throw new IllegalArgumentException(
-                    "Event already exists"
+                    "Event already exists: "
+                            + request.eventName()
             );
         }
 
@@ -117,6 +120,8 @@ public class NotificationEventConfigService {
             Long id,
             NotificationEventUpdateRequest request) {
 
+        // Check duplicate event name ignoring case
+        // excluding the current event
         if (repository.existsByEventNameIgnoreCaseAndIdNot(
                 request.eventName(),
                 id)) {
