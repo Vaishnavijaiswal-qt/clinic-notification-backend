@@ -1,0 +1,35 @@
+package com.clinicalx.notification.dto;
+
+import com.clinicalx.notification.enums.NotificationType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class EventMappingCreateResponse {
+
+    private Long clientId;
+    private String clientName;
+
+    private Long clinicId;
+    private String clinicName;
+
+    private List<EventMappingItemResponse> mappings;
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EventMappingItemResponse {
+
+        private Long eventId;
+        private String eventName;
+        private List<NotificationType> notificationTypes;
+    }
+}

@@ -1,16 +1,14 @@
 package com.clinicalx.notification.controller;
 
+import com.clinicalx.notification.dto.EventMappingCreateResponse;
 import com.clinicalx.notification.dto.EventMappingRequest;
-import com.clinicalx.notification.dto.EventMappingResponse;
 import com.clinicalx.notification.dto.EventMappingUpdateResponse;
-import com.clinicalx.notification.entity.EventMapping;
 import com.clinicalx.notification.service.EventMappingService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/event-mappings")
@@ -37,13 +35,14 @@ public class EventMappingController {
                 )
         );
     }
+
     @PostMapping
-    public ResponseEntity<List<EventMappingResponse>> create(
+    public ResponseEntity<EventMappingCreateResponse> create(
             @RequestBody EventMappingRequest request) {
 
-        return ResponseEntity.ok(
-                service.create(request)
-        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(service.create(request));
     }
 
     @PutMapping("/{id}")
@@ -54,6 +53,7 @@ public class EventMappingController {
                 service.update(request)
         );
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(
             @PathVariable Long id) {
