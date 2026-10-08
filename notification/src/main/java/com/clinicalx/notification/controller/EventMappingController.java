@@ -46,7 +46,7 @@ public class EventMappingController {
         );
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<EventMappingUpdateResponse> update(
             @RequestBody EventMappingRequest request) {
 
