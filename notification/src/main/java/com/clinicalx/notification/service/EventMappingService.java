@@ -162,33 +162,44 @@ public class EventMappingService {
         List<NotificationType> requestedTypes =
                 request.getNotificationTypes();
 
-        List<NotificationType> existingTypes =
-                new ArrayList<>();
-
+        // Remove notification types that are no longer selected
         for (EventMapping existing : existingMappings) {
 
-            existingTypes.add(existing.getNotificationType());
+            NotificationType existingType =
+                    existing.getNotificationType();
 
-            if (!requestedTypes.contains(existing.getNotificationType())) {
+            if (!requestedTypes.contains(existingType)) {
                 repository.delete(existing);
             }
         }
 
-        for (NotificationType type : requestedTypes) {
+        // Add newly selected notification types
+        for (NotificationType requestedType : requestedTypes) {
 
-            if (!existingTypes.contains(type)) {
+            boolean alreadyExists = false;
+
+            for (EventMapping existing : existingMappings) {
+
+                if (existing.getNotificationType() == requestedType) {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+
+            if (!alreadyExists) {
 
                 EventMapping mapping = new EventMapping();
 
                 mapping.setClientId(request.getClientId());
                 mapping.setClinicId(request.getClinicId());
                 mapping.setEventId(request.getEventId());
-                mapping.setNotificationType(type);
+                mapping.setNotificationType(requestedType);
 
                 repository.save(mapping);
             }
         }
 
+        // Prepare the same response
         List<String> notificationTypes =
                 new ArrayList<>();
 
