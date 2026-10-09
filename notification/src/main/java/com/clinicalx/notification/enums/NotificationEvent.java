@@ -17,21 +17,18 @@ public enum NotificationEvent {
         this.value = value;
         this.displayName = displayName;
     }
-
-    @JsonValue
-    public String getValue() {
-        return value;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
     @JsonCreator
     public static NotificationEvent fromValue(String value) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Notification event cannot be empty"
+            );
+        }
+
         for (NotificationEvent event : NotificationEvent.values()) {
             if (event.value.equalsIgnoreCase(value)
-                    || event.name().equalsIgnoreCase(value)) {
+                    || event.name().equalsIgnoreCase(value)
+                    || event.displayName.equalsIgnoreCase(value)) {
                 return event;
             }
         }
@@ -40,4 +37,6 @@ public enum NotificationEvent {
                 "Unknown notification event: " + value
         );
     }
+
+
 }
