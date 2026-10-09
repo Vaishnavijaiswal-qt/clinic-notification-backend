@@ -11,5 +11,6 @@ public interface CommunicationPreferenceRepository extends JpaRepository<Communi
 
     Optional<CommunicationPreference> findByClinic_IdAndNotificationEvent(
             Long clinicId,
-            NotificationEvent notificationEvent);
+            String notificationEvent);
+    List<CommunicationPreference> findByClinic_Id(Long clinicId);
 }

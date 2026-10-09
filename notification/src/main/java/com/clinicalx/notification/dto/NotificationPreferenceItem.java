@@ -1,6 +1,6 @@
 package com.clinicalx.notification.dto;
-import com.clinicalx.notification.enums.NotificationEvent;
-import jakarta.persistence.*;
+
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -8,8 +8,8 @@ import lombok.*;
 @Setter
 public class NotificationPreferenceItem {
 
-    @NotNull
-    private NotificationEvent notificationEvent;
+    @NotBlank(message = "Notification event name is required")
+    private String notificationEvent;
 
     @NotNull
     private Boolean whatsappEnabled;

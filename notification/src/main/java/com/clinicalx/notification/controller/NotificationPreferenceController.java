@@ -1,5 +1,6 @@
 package com.clinicalx.notification.controller;
 
+import com.clinicalx.notification.dto.NotificationPreferenceResponse;
 import com.clinicalx.notification.dto.NotificationPreferenceUpdateRequest;
 import com.clinicalx.notification.entity.CommunicationPreference;
 import com.clinicalx.notification.service.NotificationPreferenceService;
@@ -15,12 +16,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationPreferenceController {
 
-    private final NotificationPreferenceService service;
+    private final NotificationPreferenceService notificationPreferenceService;;
+    private final NotificationPreferenceService preferenceService;
 
     @PostMapping
-    public ResponseEntity<List<CommunicationPreference>> savePreferences(
-            @Valid @RequestBody NotificationPreferenceUpdateRequest request) {
+    public NotificationPreferenceResponse savePreferences(
+            @RequestBody NotificationPreferenceUpdateRequest request) {
 
-        return ResponseEntity.ok(service.savePreferences(request));
+        return preferenceService.savePreferences(request);
+    }
+    @GetMapping
+    public NotificationPreferenceResponse getPreferences(
+            @RequestParam Long clinicId) {
+
+        return preferenceService.getPreferences(clinicId);
     }
 }

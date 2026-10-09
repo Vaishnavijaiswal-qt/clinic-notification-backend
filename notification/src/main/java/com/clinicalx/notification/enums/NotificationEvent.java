@@ -17,6 +17,7 @@ public enum NotificationEvent {
         this.value = value;
         this.displayName = displayName;
     }
+
     @JsonCreator
     public static NotificationEvent fromValue(String value) {
         if (value == null || value.isBlank()) {

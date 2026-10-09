@@ -33,9 +33,8 @@ public class CommunicationPreference {
     @JsonIgnore
     private Clinic clinic;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "notification_event", nullable = false)
-    private NotificationEvent notificationEvent;
+    private String notificationEvent;
 
     @Column(name = "whatsapp_enabled", nullable = false)
     private Boolean whatsappEnabled = false;
