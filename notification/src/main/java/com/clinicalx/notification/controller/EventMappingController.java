@@ -1,6 +1,7 @@
 package com.clinicalx.notification.controller;
 
 import com.clinicalx.notification.dto.EventMappingCreateResponse;
+import com.clinicalx.notification.dto.EventMappingPageResponse;
 import com.clinicalx.notification.dto.EventMappingRequest;
 import com.clinicalx.notification.dto.EventMappingUpdateResponse;
 import com.clinicalx.notification.service.EventMappingService;
@@ -18,7 +19,7 @@ public class EventMappingController {
     private final EventMappingService service;
 
     @GetMapping
-    public ResponseEntity<?> get(
+    public ResponseEntity<EventMappingPageResponse> get(
             @RequestParam(required = false) Long clinicId,
             @RequestParam(required = false) Long clientId,
             @RequestParam(required = false) String search,
@@ -26,13 +27,7 @@ public class EventMappingController {
             @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                service.get(
-                        clinicId,
-                        clientId,
-                        search,
-                        page,
-                        size
-                )
+                service.get(clinicId, clientId, search, page, size)
         );
     }
 
@@ -47,19 +42,17 @@ public class EventMappingController {
 
     @PutMapping("/{id}")
     public ResponseEntity<EventMappingUpdateResponse> update(
+            @PathVariable Long id,
             @RequestBody EventMappingRequest request) {
 
-        return ResponseEntity.ok(
-                service.update(request)
-        );
+        return ResponseEntity.ok(service.update(request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> delete(
             @PathVariable Long id) {
 
-        return ResponseEntity.ok(
-                service.delete(id)
-        );
+        return ResponseEntity.ok(service.delete(id));
     }
 }
+

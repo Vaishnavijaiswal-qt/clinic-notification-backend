@@ -1,6 +1,5 @@
-package com.clinicalx.notification.dto;
+ package com.clinicalx.notification.dto;
 
-import com.clinicalx.notification.enums.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,20 +15,19 @@ public class EventMappingCreateResponse {
 
     private Long clientId;
     private String clientName;
-
     private Long clinicId;
     private String clinicName;
-
-    private List<EventMappingItemResponse> mappings;
+    private List<MappingItem> mappings;
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class EventMappingItemResponse {
+    public static class MappingItem {
 
+        private Long id;
         private Long eventId;
         private String eventName;
-        private List<NotificationType> notificationTypes;
+        private List<String> notificationTypes;
     }
 }
