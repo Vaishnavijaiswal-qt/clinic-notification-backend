@@ -26,9 +26,8 @@ public class Template {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "notification_event", nullable = false)
-    private NotificationEvent notificationEvent;
+    private String notificationEvent;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "notification_type", nullable = false)

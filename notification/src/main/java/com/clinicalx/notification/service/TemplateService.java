@@ -21,9 +21,7 @@ public class TemplateService {
     }
 
     // Get templates for one event
-    public List<Template> getTemplatesByEvent(
-            com.clinicalx.notification.enums.NotificationEvent event) {
-
+    public List<Template> getTemplatesByEvent(String event) {
         return templateRepository.findByNotificationEvent(event);
     }
 
@@ -92,8 +90,7 @@ public class TemplateService {
         templateRepository.delete(template);
     }
     // Get EMAIL template for an event
-    public Template getEmailTemplate(NotificationEvent event) {
-
+    public Template getEmailTemplate(String event) {
         return templateRepository
                 .findByNotificationEventAndNotificationType(
                         event,

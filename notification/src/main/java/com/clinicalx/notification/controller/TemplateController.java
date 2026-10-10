@@ -1,7 +1,6 @@
 package com.clinicalx.notification.controller;
 
 import com.clinicalx.notification.entity.Template;
-import com.clinicalx.notification.enums.NotificationEvent;
 import com.clinicalx.notification.service.TemplateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +27,7 @@ public class TemplateController {
     // GET BY EVENT
     @GetMapping("/event/{event}")
     public ResponseEntity<List<Template>> getTemplatesByEvent(
-            @PathVariable NotificationEvent event) {
+            @PathVariable String event) {
 
         return ResponseEntity.ok(
                 templateService.getTemplatesByEvent(event)

@@ -1,7 +1,6 @@
 package com.clinicalx.notification.service;
 
 import com.clinicalx.notification.entity.Template;
-import com.clinicalx.notification.enums.NotificationEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +15,7 @@ public class NotificationService {
 
     public void sendEmailNotification(
             String to,
-            NotificationEvent event,
+            String event,
             Map<String, String> variables) {
 
         // 1. Find the EMAIL template for this event
