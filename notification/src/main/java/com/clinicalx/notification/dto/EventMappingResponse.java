@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,5 +24,5 @@ public class EventMappingResponse {
     private Long eventId;
     private String eventName;
 
-    private String notificationType;
+    private List<String> notificationTypes;
 }
