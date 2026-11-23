@@ -1,11 +1,22 @@
 package com.clinicalx.notification.service;
 
+import com.clinicalx.notification.entity.NotificationEventConfig;
 import com.clinicalx.notification.entity.Template;
+import com.clinicalx.notification.repository.NotificationEventConfigRepository;
 import com.clinicalx.notification.repository.TemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.clinicalx.notification.enums.NotificationEvent;
 import com.clinicalx.notification.enums.NotificationType;
+import com.clinicalx.notification.entity.EventVariable;
+import com.clinicalx.notification.repository.EventVariableRepository;
+
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 import java.util.List;
 
@@ -14,6 +25,8 @@ import java.util.List;
 public class TemplateService {
 
     private final TemplateRepository templateRepository;
+    private final EventVariableRepository eventVariableRepository;
+    private final NotificationEventConfigRepository eventRepository;
 
     // Get all templates
     public List<Template> getAllTemplates() {
@@ -33,6 +46,73 @@ public class TemplateService {
                         new RuntimeException("Template not found with id: " + id));
     }
 
+    private void validateTemplateVariables(Template template) {
+
+        // Find event using event name
+        String eventKey = template.getNotificationEvent()
+                .replace("_", " ")
+                .trim();
+
+        NotificationEventConfig event = null;
+
+        List<NotificationEventConfig> events =
+                eventRepository.findAll();
+
+        for (NotificationEventConfig existingEvent : events) {
+
+            if (existingEvent.getEventName()
+                    .trim()
+                    .equalsIgnoreCase(eventKey)) {
+
+                event = existingEvent;
+                break;
+            }
+        }
+
+        if (event == null) {
+            throw new RuntimeException("Notification event not found");
+        }
+
+        // Get active variables for this event
+        List<EventVariable> registeredVariables =
+                eventVariableRepository.findByEventIdAndActiveTrue(
+                        event.getId()
+                );
+
+        // Store allowed variable keys
+        List<String> allowedVariables = new ArrayList<>();
+
+        for (EventVariable variable : registeredVariables) {
+            allowedVariables.add(variable.getVariableKey());
+        }
+
+        // Combine subject and message
+        String content = "";
+
+        if (template.getSubject() != null) {
+            content = content + template.getSubject();
+        }
+
+        if (template.getMessage() != null) {
+            content = content + template.getMessage();
+        }
+
+        // Find placeholders
+        Pattern pattern = Pattern.compile("\\{\\{(.*?)\\}\\}");
+        Matcher matcher = pattern.matcher(content);
+
+        while (matcher.find()) {
+
+            String variableKey = matcher.group(1).trim();
+
+            if (!allowedVariables.contains(variableKey)) {
+                throw new RuntimeException(
+                        "Invalid template variable: " + variableKey
+                );
+            }
+        }
+    }
+
     // ADD TEMPLATE
     public Template addTemplate(Template template) {
 
@@ -46,6 +126,8 @@ public class TemplateService {
                     "Template already exists for this event and notification type"
             );
         }
+
+        validateTemplateVariables(template);
 
         return templateRepository.save(template);
     }
@@ -76,6 +158,7 @@ public class TemplateService {
                 templateDetails.getMessage()
         );
 
+        validateTemplateVariables(existingTemplate);
         return templateRepository.save(existingTemplate);
     }
 
