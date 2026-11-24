@@ -67,11 +67,21 @@ public class EventVariableService {
                 variableDetails
         );
     }
+
     public EventVariable updateVariable(Long id, EventVariable updatedVariable) {
 
         EventVariable existing = eventVariableRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("Variable not found"));
+
+        if (eventVariableRepository.existsByEventIdAndVariableKeyAndIdNot(
+                existing.getEvent().getId(),
+                updatedVariable.getVariableKey(),
+                id)) {
+
+            throw new IllegalArgumentException(
+                    "Variable already exists for this event");
+        }
 
         existing.setVariableKey(updatedVariable.getVariableKey());
         existing.setDisplayName(updatedVariable.getDisplayName());
@@ -80,6 +90,7 @@ public class EventVariableService {
 
         return eventVariableRepository.save(existing);
     }
+
 
     public void deleteVariable(Long id) {
 

@@ -15,4 +15,10 @@ public interface EventVariableRepository
             Long eventId,
             String variableKey
     );
+
+    boolean existsByEventIdAndVariableKeyAndIdNot(
+            Long eventId,
+            String variableKey,
+            Long id
+    );
 }
