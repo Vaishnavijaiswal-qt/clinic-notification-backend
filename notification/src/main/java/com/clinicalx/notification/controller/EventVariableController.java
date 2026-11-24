@@ -3,6 +3,7 @@ package com.clinicalx.notification.controller;
 
 import com.clinicalx.notification.entity.EventVariable;
 import com.clinicalx.notification.service.EventVariableService;
+import com.clinicalx.notification.dto.EventVariableResponse;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +28,7 @@ public class EventVariableController {
 
     // Get active variables of an event
     @GetMapping("/notification-events/{eventId}/variables")
-    public List<EventVariable> getVariables(
+    public EventVariableResponse getVariables(
             @PathVariable Long eventId) {
 
         return eventVariableService.getVariables(eventId);

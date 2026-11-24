@@ -5,7 +5,7 @@ import com.clinicalx.notification.entity.EventVariable;
 import com.clinicalx.notification.entity.NotificationEventConfig;
 import com.clinicalx.notification.repository.EventVariableRepository;
 import com.clinicalx.notification.repository.NotificationEventConfigRepository;
-
+import com.clinicalx.notification.dto.EventVariableResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -35,15 +35,38 @@ public class EventVariableService {
         return eventVariableRepository.save(variable);
     }
 
-    public List<EventVariable> getVariables(Long eventId) {
+    public EventVariableResponse getVariables(Long eventId) {
 
-        if (!eventRepository.existsById(eventId)) {
-            throw new RuntimeException("Notification event not found");
+        NotificationEventConfig event = eventRepository.findById(eventId)
+                .orElseThrow(() ->
+                        new RuntimeException("Notification event not found"));
+
+        List<EventVariable> eventVariables =
+                eventVariableRepository.findByEventIdAndActiveTrue(eventId);
+
+        List<EventVariableResponse.VariableDetails> variableDetails =
+                new java.util.ArrayList<>();
+
+        for (EventVariable variable : eventVariables) {
+
+            EventVariableResponse.VariableDetails details =
+                    new EventVariableResponse.VariableDetails(
+                            variable.getId(),
+                            variable.getVariableKey(),
+                            variable.getDisplayName(),
+                            variable.getDataType(),
+                            variable.isRequired()
+                    );
+
+            variableDetails.add(details);
         }
 
-        return eventVariableRepository.findByEventIdAndActiveTrue(eventId);
+        return new EventVariableResponse(
+                event.getId(),
+                event.getEventName(),
+                variableDetails
+        );
     }
-
     public EventVariable updateVariable(Long id, EventVariable updatedVariable) {
 
         EventVariable existing = eventVariableRepository.findById(id)
