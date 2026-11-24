@@ -1,5 +1,6 @@
 package com.clinicalx.notification.controller;
 
+import com.clinicalx.notification.dto.GroupedTemplateResponse;
 import com.clinicalx.notification.entity.Template;
 import com.clinicalx.notification.service.TemplateService;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,12 @@ public class TemplateController {
 
     private final TemplateService templateService;
 
-    // GET ALL
+    // GET ALL - GROUPED BY EVENT
     @GetMapping
-    public ResponseEntity<List<Template>> getAllTemplates() {
+    public ResponseEntity<List<GroupedTemplateResponse>> getAllTemplates() {
 
         return ResponseEntity.ok(
-                templateService.getAllTemplates()
+                templateService.getGroupedTemplates()
         );
     }
 

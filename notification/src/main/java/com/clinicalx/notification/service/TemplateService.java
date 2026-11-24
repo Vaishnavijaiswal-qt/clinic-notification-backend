@@ -1,5 +1,6 @@
 package com.clinicalx.notification.service;
 
+import com.clinicalx.notification.dto.TemplateItemResponse;
 import com.clinicalx.notification.entity.NotificationEventConfig;
 import com.clinicalx.notification.entity.Template;
 import com.clinicalx.notification.repository.NotificationEventConfigRepository;
@@ -10,6 +11,9 @@ import com.clinicalx.notification.enums.NotificationEvent;
 import com.clinicalx.notification.enums.NotificationType;
 import com.clinicalx.notification.entity.EventVariable;
 import com.clinicalx.notification.repository.EventVariableRepository;
+import com.clinicalx.notification.dto.GroupedTemplateResponse;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 
 import java.util.ArrayList;
@@ -184,5 +188,47 @@ public class TemplateService {
                                 "Email template not found for event: " + event
                         )
                 );
+    }
+
+    // Get all templates grouped by notification event
+    public List<GroupedTemplateResponse> getGroupedTemplates() {
+
+        List<Template> allTemplates = templateRepository.findAll();
+
+        Map<String, List<TemplateItemResponse>> groupedMap =
+                new LinkedHashMap<>();
+
+        for (Template template : allTemplates) {
+
+            String event = template.getNotificationEvent();
+
+            if (!groupedMap.containsKey(event)) {
+                groupedMap.put(event, new ArrayList<>());
+            }
+
+            TemplateItemResponse item = new TemplateItemResponse(
+                    template.getId(),
+                    template.getNotificationType(),
+                    template.getSubject(),
+                    template.getMessage(),
+                    template.getCreatedAt(),
+                    template.getUpdatedAt()
+            );
+
+            groupedMap.get(event).add(item);
+        }
+
+        List<GroupedTemplateResponse> response = new ArrayList<>();
+
+        for (Map.Entry<String, List<TemplateItemResponse>> entry
+                : groupedMap.entrySet()) {
+
+            response.add(new GroupedTemplateResponse(
+                    entry.getKey(),
+                    entry.getValue()
+            ));
+        }
+
+        return response;
     }
 }
